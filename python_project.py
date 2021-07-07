@@ -181,3 +181,74 @@ for target, color in zip(targets,colors):
                , s = 50)
 ax.legend(targets)
 ax.grid()
+
+import matplotlib.pyplot as plt
+import datetime
+
+probability_symptoms = data.symptom_onset[data.travel_history_location_isWuhan == 1].value_counts(normalize = True)
+probability_death = data.outcomes[data.travel_history_location_isWuhan == 1].value_counts(normalize = True)
+print(probability_symptoms)
+m_color = '#F8BA00'
+probability_symptoms.plot(kind = 'bar', alpha = 0.5, color = m_color)
+plt.title('Probability of having symptoms if the person went to Wuhan')
+plt.show()
+
+print(probability_death)
+m_color = '#F8BA00'
+probability_death.plot(kind = 'bar', alpha = 0.5, color = m_color)
+plt.title('Probability of dying if the person went to Wuhan')
+plt.show()
+
+
+
+date_a = data.date_admission_hospital.fillna('novalue').tolist()
+date_lst = []
+for date in date_a:
+    if "." in date:
+        if not "-" in date:
+            newDate = datetime.datetime.strptime(date,"%d.%m.%Y")
+            date_lst.append(newDate)
+        else :
+            value = "novalue"
+            date_lst.append(value)
+    else :
+        value = "novalue"
+        date_lst.append(value)
+
+data['date_admission'] = date_lst
+data.date_admission = data.date_admission.replace('novalue',np.NaN)
+data.date_admission.dropna(inplace = True)
+data['date_admission'] = pd.to_datetime(data['date_admission'])
+
+
+
+date_d = data.date_death_or_discharge.fillna('novalue').tolist()
+dated_lst = []
+for date in date_d:
+    if "." in date:
+        if not "-" in date:
+            isDate = date.split(".")
+            if int(isDate[1]) > 12:
+                newDate = datetime.datetime.strptime(date,"%m.%d.%Y")
+                dated_lst.append(newDate)
+            else:
+                newDate = datetime.datetime.strptime(date,"%d.%m.%Y")
+                dated_lst.append(newDate)
+        else :
+            value = "novalue"
+            dated_lst.append(value)
+    else :
+        value = "novalue"
+        dated_lst.append(value)
+
+data['date_discharge'] = dated_lst
+data.date_discharge = data.date_discharge.replace('novalue',np.NaN)
+data.date_discharge.dropna(inplace = True)
+data['date_discharge'] = pd.to_datetime(data['date_discharge'])
+
+
+data['average_recovery'] = data['date_discharge'] - data['date_admission'] 
+
+average_recovery_interval = data.average_recovery[data.travel_history_location_isWuhan == 1].mean()
+print('Average recovery interval : ')
+print(average_recovery_interval)
