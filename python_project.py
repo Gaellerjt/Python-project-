@@ -252,3 +252,104 @@ data['average_recovery'] = data['date_discharge'] - data['date_admission']
 average_recovery_interval = data.average_recovery[data.travel_history_location_isWuhan == 1].mean()
 print('Average recovery interval : ')
 print(average_recovery_interval)
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import metrics
+
+X = data.copy()
+del X['outcomes']
+Y = data.outcomes
+
+
+X_train, X_test, y_train, y_test = train_test_split( 
+             X, Y, test_size = 0.2, random_state=42) 
+  
+knn = KNeighborsClassifier(n_neighbors=7) 
+  
+knn.fit(X_train, y_train) 
+y_pred = knn.predict(X_test);
+  
+# Predict on dataset which model has not seen before 
+print(y_pred) 
+
+
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+
+from sklearn.metrics import confusion_matrix, classification_report
+
+print(confusion_matrix(y_test, y_pred))
+
+print(classification_report(y_test, y_pred))
+
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error 
+
+Xnew = data.copy()
+del Xnew['age_new']
+Ynew = data.age_new
+
+X_train, X_test, y_train, y_test = train_test_split(Xnew, Ynew, test_size=0.2, random_state=0)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred_new = model.predict(X_test)
+
+print('predicted response:', y_pred_new)
+
+print('Mean Squared Error:', mean_squared_error(y_test, y_pred_new))
+
+newData = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_new})
+nD= newData.head(15)
+nD.plot(kind='bar',figsize=(16,10))
+nD.grid(which='major', linestyle='-', linewidth='0.5', color='green')
+nD.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+nD.show()
+
+
+import matplotlib.cm as cm
+from sklearn.metrics import silhouette_score,silhouette_samples
+from sklearn import decomposition
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+X = data.copy()
+X = X.sample(n=4000)
+
+pca = decomposition.PCA(n_components=2)
+pca.fit(X)
+X = pca.transform(X)
+
+range_n_clusters = list (range(2,10))
+
+for n_clusters in range_n_clusters:
+
+    
+    clusterer = KMeans(n_clusters=n_clusters, random_state=10)
+    cluster_labels = clusterer.fit_predict(X)
+    silhouette_avg = silhouette_score(X, cluster_labels)
+    print("For n_clusters =", n_clusters,
+          "The average silhouette_score is :", silhouette_avg)
+    sample_silhouette_values = silhouette_samples(X, cluster_labels)
+    
+   
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.set_size_inches(18, 7)
+
+    colors = cm.nipy_spectral(cluster_labels.astype(float) / n_clusters)
+    ax2.scatter(X[:, 0], X[:, 1], marker='.', s=30, lw=0, alpha=0.7,
+                c=colors, edgecolor='k')
+
+    centers = clusterer.cluster_centers_
+    ax2.scatter(centers[:, 0], centers[:, 1], marker='o',
+                c="white", alpha=1, s=200, edgecolor='k')
+
+    for i, c in enumerate(centers):
+        ax2.scatter(c[0], c[1], marker='$%d$' % i, alpha=1,
+                    s=50, edgecolor='k')
+
+
+plt.show()
