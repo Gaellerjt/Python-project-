@@ -353,3 +353,61 @@ for n_clusters in range_n_clusters:
 
 
 plt.show()
+
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LinearRegression
+
+X = data.copy()
+Y = data.outcomes
+
+X_train, X_test, y_train, y_test = train_test_split( 
+                        X, np.ravel(Y), 
+                test_size = 0.30, random_state = 101)
+
+model = GaussianNB()
+
+parameters = { 'var_smoothing' : [1,2,3]}
+grid = GridSearchCV(estimator=model, param_grid=parameters, cv= 5, n_jobs = 200,verbose = 5)
+grid.fit(X, Y)
+
+print('Best paramiter for Gaussian model : ',grid.best_params_)
+
+
+
+model = LinearRegression()
+parameters = {'fit_intercept':('True', 'False'), 'normalize':('True', 'False'), 'n_jobs' : [100,150,200]}
+
+
+grid = GridSearchCV(estimator=model, param_grid=parameters, cv= 5, n_jobs = 200,verbose = 5)
+grid.fit(X, Y)
+
+print('Best paramiter for linear regression : ', grid.best_params_)
+
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error 
+
+Xnew = data.copy()
+del Xnew['outcomes']
+Ynew = data.outcomes
+
+X_train, X_test, y_train, y_test = train_test_split(Xnew, Ynew, test_size=0.2, random_state=0)
+
+model = LinearRegression(fit_intercept = 'True', n_jobs = 100, normalize = 'True')
+model.fit(X_train, y_train)
+
+y_pred_new = model.predict(X_test)
+
+
+print('Mean Squared Error for Linear regression:', mean_squared_error(y_test, y_pred_new))
+
+
+model2 = GaussianNB(var_smoothing = 1)
+model2.fit(X_train,y_train)
+y_pred_new2 = model2.predict(X_test)
+
+print('Mean Squared Error for Gaussian:', mean_squared_error(y_test, y_pred_new2))
