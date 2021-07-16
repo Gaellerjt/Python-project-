@@ -411,3 +411,12 @@ model2.fit(X_train,y_train)
 y_pred_new2 = model2.predict(X_test)
 
 print('Mean Squared Error for Gaussian:', mean_squared_error(y_test, y_pred_new2))
+
+model =RandomForestClassifier(n_estimators=100)
+model.fit(X_train,y_train)
+y_pred=model.predict(X_test)
+print('Mean Squared Error :', mean_squared_error(y_test, y_pred))
+
+
+
+
