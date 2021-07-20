@@ -9,7 +9,27 @@ import numpy as np
 import pandas as pd
 import re
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+from sklearn.metrics import mean_squared_error 
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import decomposition
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error 
+import matplotlib.cm as cm
+from sklearn.metrics import silhouette_score,silhouette_samples
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error 
 
+
+# read the data 
 data = pd.read_csv('/Users/gaellerojat/Desktop/ISEP/COURS A2/IA/PROJET/raw_data.csv', sep = ',')  
 data = data.drop(['Unnamed: 0'], axis=1)
 
@@ -19,7 +39,7 @@ print(data.columns)
 
 
 """
-
+# Cleaning the data set 
 
 del data['ID']
 
@@ -129,13 +149,11 @@ data.fillna(data.mode().iloc[0], inplace=True)
 lb_make = LabelEncoder()
 for i in data.columns : 
     data[i] = lb_make.fit_transform(data[i])
-    
-    
-    
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn import decomposition
-from sklearn.preprocessing import StandardScaler
+
+"""
+# Show the correlation between variables 
+
+
 
 plt.figure(figsize=(12,10))
 cor = data.corr()
@@ -146,8 +164,11 @@ plt.show()
 cor_target = abs(cor["outcomes"])
 relevant_features = cor_target[cor_target>0.03]
 print(relevant_features)
+"""
 
+"""
 
+# Plot the variable outcomes and project it with PCA 
 
 x = data.copy()
 del x['outcomes']
@@ -163,6 +184,7 @@ principalDf = pd.DataFrame(data = principalComponents
 
 finalDf = pd.concat([principalDf, Y], axis = 1)
 finalDf = finalDf.sample(n=2000)
+
 
 targets = [0,1,2,3]
 colors = ['b','g','y','r']
@@ -181,12 +203,15 @@ for target, color in zip(targets,colors):
                , s = 50)
 ax.legend(targets)
 ax.grid()
+"""
 
-import matplotlib.pyplot as plt
-import datetime
+"""
+
+# Calcul of probabilities 
 
 probability_symptoms = data.symptom_onset[data.travel_history_location_isWuhan == 1].value_counts(normalize = True)
 probability_death = data.outcomes[data.travel_history_location_isWuhan == 1].value_counts(normalize = True)
+
 print(probability_symptoms)
 m_color = '#F8BA00'
 probability_symptoms.plot(kind = 'bar', alpha = 0.5, color = m_color)
@@ -198,8 +223,6 @@ m_color = '#F8BA00'
 probability_death.plot(kind = 'bar', alpha = 0.5, color = m_color)
 plt.title('Probability of dying if the person went to Wuhan')
 plt.show()
-
-
 
 date_a = data.date_admission_hospital.fillna('novalue').tolist()
 date_lst = []
@@ -219,7 +242,6 @@ data['date_admission'] = date_lst
 data.date_admission = data.date_admission.replace('novalue',np.NaN)
 data.date_admission.dropna(inplace = True)
 data['date_admission'] = pd.to_datetime(data['date_admission'])
-
 
 
 date_d = data.date_death_or_discharge.fillna('novalue').tolist()
@@ -250,13 +272,12 @@ data['date_discharge'] = pd.to_datetime(data['date_discharge'])
 data['average_recovery'] = data['date_discharge'] - data['date_admission'] 
 
 average_recovery_interval = data.average_recovery[data.travel_history_location_isWuhan == 1].mean()
-print('Average recovery interval : ')
-print(average_recovery_interval)
+"""
 
 
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
+"""
+
+# Predict the outcome 
 
 X = data.copy()
 del X['outcomes']
@@ -277,15 +298,11 @@ print(y_pred)
 
 print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
 
-from sklearn.metrics import confusion_matrix, classification_report
 
 print(confusion_matrix(y_test, y_pred))
 
 print(classification_report(y_test, y_pred))
 
-
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error 
 
 Xnew = data.copy()
 del Xnew['age_new']
@@ -308,13 +325,11 @@ nD.plot(kind='bar',figsize=(16,10))
 nD.grid(which='major', linestyle='-', linewidth='0.5', color='green')
 nD.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 nD.show()
+"""
 
+"""
+# Find the best clusterization 
 
-import matplotlib.cm as cm
-from sklearn.metrics import silhouette_score,silhouette_samples
-from sklearn import decomposition
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 
 X = data.copy()
 X = X.sample(n=4000)
@@ -353,20 +368,13 @@ for n_clusters in range_n_clusters:
 
 
 plt.show()
+"""
 
 
 
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import GridSearchCV
-from sklearn.linear_model import LinearRegression
+"""
 
-X = data.copy()
-Y = data.outcomes
-
-X_train, X_test, y_train, y_test = train_test_split( 
-                        X, np.ravel(Y), 
-                test_size = 0.30, random_state = 101)
+# Find the best parameters for models 
 
 model = GaussianNB()
 
@@ -386,10 +394,9 @@ grid = GridSearchCV(estimator=model, param_grid=parameters, cv= 5, n_jobs = 200,
 grid.fit(X, Y)
 
 print('Best paramiter for linear regression : ', grid.best_params_)
-
-
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error 
+"""
+"""
+# What is the best model ? 
 
 Xnew = data.copy()
 del Xnew['outcomes']
@@ -403,20 +410,18 @@ model.fit(X_train, y_train)
 y_pred_new = model.predict(X_test)
 
 
-print('Mean Squared Error for Linear regression:', mean_squared_error(y_test, y_pred_new))
+print('Mean Squared Error :', mean_squared_error(y_test, y_pred_new))
 
 
 model2 = GaussianNB(var_smoothing = 1)
 model2.fit(X_train,y_train)
 y_pred_new2 = model2.predict(X_test)
 
-print('Mean Squared Error for Gaussian:', mean_squared_error(y_test, y_pred_new2))
+print('Mean Squared Error :', mean_squared_error(y_test, y_pred_new2))
 
-model =RandomForestClassifier(n_estimators=100)
-model.fit(X_train,y_train)
-y_pred=model.predict(X_test)
+
+model3 =RandomForestClassifier(n_estimators=100)
+model3.fit(X_train,y_train)
+y_pred=model3.predict(X_test)
 print('Mean Squared Error :', mean_squared_error(y_test, y_pred))
-
-
-
-
+"""
