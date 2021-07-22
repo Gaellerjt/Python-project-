@@ -9,10 +9,13 @@ import numpy as np
 import pandas as pd
 import re
 from sklearn.preprocessing import LabelEncoder
+import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier 
 from sklearn.linear_model import LinearRegression
+from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 from sklearn.metrics import mean_squared_error 
@@ -146,14 +149,15 @@ data = data.drop(['travel_history_location'], axis=1)
 data.fillna(data.mode().iloc[0], inplace=True)
 
 
+
 lb_make = LabelEncoder()
 for i in data.columns : 
     data[i] = lb_make.fit_transform(data[i])
 
+
 """
+
 # Show the correlation between variables 
-
-
 
 plt.figure(figsize=(12,10))
 cor = data.corr()
@@ -164,9 +168,7 @@ plt.show()
 cor_target = abs(cor["outcomes"])
 relevant_features = cor_target[cor_target>0.03]
 print(relevant_features)
-"""
 
-"""
 
 # Plot the variable outcomes and project it with PCA 
 
@@ -205,8 +207,8 @@ ax.legend(targets)
 ax.grid()
 """
 
-"""
 
+"""
 # Calcul of probabilities 
 
 probability_symptoms = data.symptom_onset[data.travel_history_location_isWuhan == 1].value_counts(normalize = True)
@@ -223,6 +225,13 @@ m_color = '#F8BA00'
 probability_death.plot(kind = 'bar', alpha = 0.5, color = m_color)
 plt.title('Probability of dying if the person went to Wuhan')
 plt.show()
+
+"""
+
+
+"""
+# To run the part concerning the probability with date, you must put in argument 
+# the lines 149 to 151 as the date format would not be recognized 
 
 date_a = data.date_admission_hospital.fillna('novalue').tolist()
 date_lst = []
@@ -272,11 +281,11 @@ data['date_discharge'] = pd.to_datetime(data['date_discharge'])
 data['average_recovery'] = data['date_discharge'] - data['date_admission'] 
 
 average_recovery_interval = data.average_recovery[data.travel_history_location_isWuhan == 1].mean()
+print(average_recovery_interval)
 """
 
 
 """
-
 # Predict the outcome 
 
 X = data.copy()
@@ -292,15 +301,9 @@ knn = KNeighborsClassifier(n_neighbors=7)
 knn.fit(X_train, y_train) 
 y_pred = knn.predict(X_test);
   
-# Predict on dataset which model has not seen before 
 print(y_pred) 
-
-
 print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
-
-
 print(confusion_matrix(y_test, y_pred))
-
 print(classification_report(y_test, y_pred))
 
 
@@ -371,10 +374,17 @@ plt.show()
 """
 
 
-
 """
-
 # Find the best parameters for models 
+
+X = data.copy()
+Y = data.outcomes
+
+X_train, X_test, y_train, y_test = train_test_split( 
+                        X, np.ravel(Y), 
+                test_size = 0.30, random_state = 101)
+
+
 
 model = GaussianNB()
 
@@ -386,15 +396,16 @@ print('Best paramiter for Gaussian model : ',grid.best_params_)
 
 
 
-model = LinearRegression()
-parameters = {'fit_intercept':('True', 'False'), 'normalize':('True', 'False'), 'n_jobs' : [100,150,200]}
+model2 = LinearRegression()
+parameters2 = {'fit_intercept':('True', 'False'), 'normalize':('True', 'False'), 'n_jobs' : [100,150,200]}
 
 
-grid = GridSearchCV(estimator=model, param_grid=parameters, cv= 5, n_jobs = 200,verbose = 5)
+grid = GridSearchCV(estimator=model2, param_grid=parameters2, cv= 5, n_jobs = 200,verbose = 5)
 grid.fit(X, Y)
 
 print('Best paramiter for linear regression : ', grid.best_params_)
 """
+
 """
 # What is the best model ? 
 
